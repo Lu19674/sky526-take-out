@@ -1,17 +1,22 @@
 package com.sky.service.impl;
 
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
 import com.sky.constant.PasswordConstant;
 import com.sky.constant.StatusConstant;
 import com.sky.context.BaseContext;
 import com.sky.dto.EmployeeDTO;
 import com.sky.dto.EmployeeLoginDTO;
+import com.sky.dto.EmployeePageQueryDTO;
 import com.sky.entity.Employee;
 import com.sky.exception.AccountLockedException;
 import com.sky.exception.AccountNotFoundException;
 import com.sky.exception.PasswordErrorException;
 import com.sky.mapper.EmployeeMapper;
 import com.sky.properties.JwtProperties;
+import com.sky.result.PageResult;
+import com.sky.result.Result;
 import com.sky.service.EmployeeService;
 import com.sky.utils.JwtUtil;
 import io.jsonwebtoken.Claims;
@@ -94,6 +99,25 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         //调用 employeeMapper 执行新增
         employeeMapper.insert(employee);
+    }
+
+    /**
+     * 员工分页查询
+     * @param employeePageQueryDTO
+     * @return
+     */
+    @Override
+    public PageResult pageQuery(EmployeePageQueryDTO employeePageQueryDTO) {
+        // select * from employee where name = #{name} limit 1,10 order by ..
+        //设置分页对象参数开始分页
+        PageHelper.startPage(employeePageQueryDTO.getPage(), employeePageQueryDTO.getPageSize());
+        Page<Employee> page = employeeMapper.pageQuery(employeePageQueryDTO);
+
+        //封装查询结果
+        PageResult pageResult=new PageResult();
+        pageResult.setTotal(page.getTotal());
+        pageResult.setRecords(page.getResult());
+        return pageResult;
     }
 
 }
