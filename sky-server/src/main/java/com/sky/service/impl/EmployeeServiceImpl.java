@@ -1,18 +1,29 @@
 package com.sky.service.impl;
 
 import com.sky.constant.MessageConstant;
+import com.sky.constant.PasswordConstant;
 import com.sky.constant.StatusConstant;
+import com.sky.context.BaseContext;
+import com.sky.dto.EmployeeDTO;
 import com.sky.dto.EmployeeLoginDTO;
 import com.sky.entity.Employee;
 import com.sky.exception.AccountLockedException;
 import com.sky.exception.AccountNotFoundException;
 import com.sky.exception.PasswordErrorException;
 import com.sky.mapper.EmployeeMapper;
+import com.sky.properties.JwtProperties;
 import com.sky.service.EmployeeService;
+import com.sky.utils.JwtUtil;
+import io.jsonwebtoken.Claims;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
+
+import javax.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
+
 @Slf4j
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
@@ -55,6 +66,34 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         //3、返回实体对象
         return employee;
+    }
+
+    /**
+     * 新增员工
+     * @param employeeDTO
+     */
+    @Override
+    public void insert(EmployeeDTO employeeDTO) {
+        Employee employee=new Employee();
+        //实体对象属性拷贝
+        BeanUtils.copyProperties(employeeDTO,employee);
+
+        //设置employee对象 insert into 进库里的其他属性
+        //密码：默认 123456(静态常量) --用MD5加密
+        String password= DigestUtils.md5DigestAsHex(PasswordConstant.DEFAULT_PASSWORD.getBytes());
+        employee.setPassword(password);
+        //员工状态，默认开启 : 1(静态常量)
+        employee.setStatus(StatusConstant.ENABLE);
+        //新增和修改时间
+        employee.setCreateTime(LocalDateTime.now());
+        employee.setUpdateTime(LocalDateTime.now());
+        //操作人id
+        //把 ThreadLocal 线程中取出在 interceptor(拦截器) 里设置的 empId 值（一个请求对应一个线程）
+        employee.setCreateUser(BaseContext.getCurrentId());
+        employee.setUpdateUser(BaseContext.getCurrentId());
+
+        //调用 employeeMapper 执行新增
+        employeeMapper.insert(employee);
     }
 
 }
