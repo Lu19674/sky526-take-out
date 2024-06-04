@@ -89,13 +89,15 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setPassword(password);
         //员工状态，默认开启 : 1(静态常量)
         employee.setStatus(StatusConstant.ENABLE);
-        //新增和修改时间
-        employee.setCreateTime(LocalDateTime.now());
+
+        //新增和修改时间（已在通知方法中赋值）
+
+        /*employee.setCreateTime(LocalDateTime.now());
         employee.setUpdateTime(LocalDateTime.now());
         //操作人id
         //把 ThreadLocal 线程中取出在 interceptor(拦截器) 里设置的 empId 值（一个请求对应一个线程）
         employee.setCreateUser(BaseContext.getCurrentId());
-        employee.setUpdateUser(BaseContext.getCurrentId());
+        employee.setUpdateUser(BaseContext.getCurrentId());*/
 
         //调用 employeeMapper 执行新增
         employeeMapper.insert(employee);
@@ -130,7 +132,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = Employee.builder()
                 .status(status)
                 .id(id)
-                .updateTime(LocalDateTime.now())
+//                .updateTime(LocalDateTime.now())
                 .build();
         employeeMapper.update(employee);
     }
@@ -154,8 +156,9 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public void updateById(EmployeeDTO employeeDTO) {
         Employee employee = Employee.builder()
-                .updateTime(LocalDateTime.now())
-                .updateUser(BaseContext.getCurrentId())
+//                .updateTime(LocalDateTime.now())
+//                .updateUser(BaseContext.getCurrentId())
+                //已在通知方法中赋值
                 .build();
         BeanUtils.copyProperties(employeeDTO,employee);
         employeeMapper.update(employee);
