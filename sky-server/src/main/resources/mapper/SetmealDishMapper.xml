@@ -8,8 +8,8 @@
         select setmeal_id from setmeal_dish
             <where>
                 dish_id in
-                <if test="ids != null ">
-                    <foreach collection="ids" item="id" separator="," open="(" close=")">
+                <if test="dishIds != null ">
+                    <foreach collection="dishIds" item="id" separator="," open="(" close=")">
                         #{id}
                     </foreach>
                 </if>

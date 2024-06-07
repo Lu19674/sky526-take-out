@@ -26,11 +26,31 @@
         order by d.create_time desc
     </select>
 
-<!--    毗连删除菜品-->
+    <!--    毗连删除菜品-->
     <delete id="deleteBaceh">
         delete from dish where id in
             <foreach collection="ids" item="id" separator="," close=")" open="(">
                 #{id}
             </foreach>
     </delete>
+
+<!--    动态修改菜品-->
+    <update id="update" parameterType="com.sky.entity.Dish">
+        update dish
+            <set>
+                <if test="name !=null"> name = #{name}</if>
+                <if test="categoryId !=null">,category_id = #{categoryId}</if>
+                <if test="price !=null">,price = #{price}</if>
+                <if test="image !=null">,image = #{image}</if>
+                <if test="description !=null">,description = #{description}</if>
+                <if test="status !=null">,status = #{status}</if>
+                <if test="updateTime !=null">,update_time = #{updateTime}</if>
+                <if test="updateUser !=null">,update_user = #{updateUser}</if>
+            </set>
+            <where>
+                <if test="id != null">
+                    id = #{id}
+                </if>
+            </where>
+    </update>
 </mapper>

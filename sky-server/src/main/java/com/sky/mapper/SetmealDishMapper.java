@@ -12,5 +12,5 @@ import java.util.List;
 public interface SetmealDishMapper {
 
 
-    List<Long> ifNullByDishIds(List<Long> ids);
+    List<Long> ifNullByDishIds(List<Long> dishIds);
 }

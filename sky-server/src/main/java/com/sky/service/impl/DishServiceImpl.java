@@ -6,9 +6,11 @@ import com.sky.constant.MessageConstant;
 import com.sky.constant.StatusConstant;
 import com.sky.dto.DishDTO;
 import com.sky.dto.DishPageQueryDTO;
+import com.sky.entity.Category;
 import com.sky.entity.Dish;
 import com.sky.entity.DishFlavor;
 import com.sky.exception.DeletionNotAllowedException;
+import com.sky.mapper.CategoryMapper;
 import com.sky.mapper.DishFlavorMapper;
 import com.sky.mapper.DishMapper;
 import com.sky.mapper.SetmealDishMapper;
@@ -21,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -36,6 +39,8 @@ public class DishServiceImpl implements DishService {
     private DishFlavorMapper dishFlavorMapper;
     @Autowired
     private SetmealDishMapper setmealDishMapper;
+    @Autowired
+    private CategoryMapper categoryMapper;
 
     /**
      * 新增菜品及相关口味
@@ -95,5 +100,51 @@ public class DishServiceImpl implements DishService {
         dishMapper.deleteBaceh(ids);
         //4删除菜品关联的口味（dish_flavor）数据
         dishFlavorMapper.deleteBaceh(ids);
+    }
+
+    /**
+     * 根据id查询菜品
+     * @param id
+     * @return
+     */
+    @Override
+    public DishVO getByid(Long id) {
+        DishVO dishVO =new DishVO();
+        //查询基本信息
+        Dish dish = dishMapper.queryById(id);
+        BeanUtils.copyProperties(dish,dishVO);
+        //查询对应口味
+        List<DishFlavor> dishFlavors= dishFlavorMapper.queryByDishId(id);
+        if(dishFlavors != null && dishFlavors.size()>0){
+            dishVO.setFlavors(dishFlavors);
+        }
+        //查询对应分类名
+        Category category = categoryMapper.getById(dish.getCategoryId());
+        dishVO.setCategoryName(category.getName());
+
+        return dishVO;
+    }
+
+    /**
+     * 修改菜品
+     * @param dishDTO
+     */
+    @Transactional
+    public void updateWithflavor(DishDTO dishDTO) {
+        Dish dish= new Dish();
+        BeanUtils.copyProperties(dishDTO,dish);
+        //1修改基本信息
+        dishMapper.update(dish);
+
+        //2删除对应口味
+        dishFlavorMapper.deleteBaceh(Collections.singletonList(dishDTO.getId()));
+        //3插入新口味
+        List<DishFlavor> flavors = dishDTO.getFlavors();
+        if (flavors !=null && flavors.size() >0) {
+            flavors.forEach(flavor ->{
+                flavor.setDishId(dishDTO.getId());
+            });//遍历为每一个口味对象附上菜品的主键
+            dishFlavorMapper.insertBatch(flavors);
+        }
     }
 }
