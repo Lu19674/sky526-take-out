@@ -5,10 +5,18 @@
 
     <!--批量新增菜品口味-->
     <insert id="insertBatch" parameterType="com.sky.entity.DishFlavor">
-        insert into dish_flavor (dish_id, name, value)
+        insert into dish_flavor (dish_id,name,value)
         values
             <foreach collection="flavors" item="flavor" separator=",">
                 (#{flavor.dishId},#{flavor.name},#{flavor.value})
             </foreach>
     </insert>
+
+<!--    根据dishId批量删除口味-->
+    <delete id="deleteBaceh" >
+        delete from dish_flavor where dish_id in
+            <foreach collection="dishIds" item="id" separator="," open="(" close=")">
+                #{id}
+            </foreach>
+    </delete>
 </mapper>

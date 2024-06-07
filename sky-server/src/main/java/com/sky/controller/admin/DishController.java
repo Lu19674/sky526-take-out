@@ -11,6 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 /**
  * 菜品管理
  */
@@ -46,7 +48,19 @@ public class DishController {
     public Result<PageResult> page(DishPageQueryDTO dto){
         log.info("分页查询：{}",dto);
         PageResult pageResult= dishService.pageQuery(dto);
-
         return Result.success(pageResult);
+    }
+
+    /**
+     * 根据ids批量删除菜品及其关联的口味
+     * @param ids
+     * @return
+     */
+    @DeleteMapping
+    @ApiOperation("批量删除菜品")
+    public Result removeByIds(@RequestParam List<Long> ids){
+        log.info("批量删除菜品 {}",ids);
+        dishService.deleteBacth(ids);
+        return Result.success();
     }
 }
