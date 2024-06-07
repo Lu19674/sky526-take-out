@@ -7,11 +7,9 @@ import com.sky.context.BaseContext;
 import com.sky.enumeration.OperationType;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
-import org.aspectj.lang.reflect.MemberSignature;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 
@@ -27,22 +25,17 @@ import java.time.LocalDateTime;
 @Aspect
 @Component
 public class AutoFillAspect {
-
-
-/**
+    /*
      * 切入点
      */
-
     @Pointcut("execution(* com.sky.mapper.*.*(..)) && @annotation(com.sky.annotation.AutoFill)")
     public void autoFillPointCut() {
     }
-
     /*
      * 前置通知，在新增和修改前为公共字段填充赋值
      *
      * @param joinPoint
      */
-
     @Before("autoFillPointCut()")
     public void autoFill(JoinPoint joinPoint) {
         log.info("开始对公共字段进行自动填充...");
