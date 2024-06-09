@@ -19,14 +19,14 @@
             <if test="categoryId != null">
                 and d.category_id = #{categoryId}
             </if>
-            <if test="status != null">
+        <if test="status != null">
                 and d.status = #{status}
             </if>
         </where>
         order by d.create_time desc
     </select>
 
-    <!--    毗连删除菜品-->
+    <!--    批量删除菜品-->
     <delete id="deleteBaceh">
         delete from dish where id in
             <foreach collection="ids" item="id" separator="," close=")" open="(">
