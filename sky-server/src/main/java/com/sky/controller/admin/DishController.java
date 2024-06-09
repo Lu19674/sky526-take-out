@@ -65,6 +65,11 @@ public class DishController {
         return Result.success();
     }
 
+    /**
+     * 根据id查询回显菜品
+     * @param id
+     * @return
+     */
     @GetMapping("/{id}")
     @ApiOperation("根据id查询回显菜品")
     public Result<DishVO> QueryById(@PathVariable Long id){
@@ -97,6 +102,21 @@ public class DishController {
     public Result<List<DishVO>> queryByCategoryId(Long categoryId,@RequestParam(name="name",required = false) String name){
         List<DishVO> dishVOs=dishService.getByCategoryId(categoryId,name);
         return Result.success(dishVOs);
+    }
+
+    /**
+     * 菜品起售停售
+     * @param status
+     * @param id
+     * @return
+     */
+    @PostMapping("/status/{status}")
+    @ApiOperation("起售停售菜品")
+    public Result updateStatusById(@PathVariable Integer status,Long id){
+        log.info("菜品起售或停售：{}->{}",id,status);
+        dishService.updateStatusById(status,id);
+
+        return Result.success();
     }
 
 }
