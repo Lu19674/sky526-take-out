@@ -34,7 +34,7 @@
             </foreach>
     </delete>
 
-<!--    动态修改菜品-->
+    <!--    动态修改菜品-->
     <update id="update" parameterType="com.sky.entity.Dish">
         update dish
             <set>
@@ -53,4 +53,15 @@
                 </if>
             </where>
     </update>
+
+    <select id="getByCategoryId" resultType="com.sky.entity.Dish">
+        select * from dish
+            <where>
+                <if test="name != null">name like concat('%',#{name},'%')</if>
+                <if test="status != null">and status = #{status}</if>
+                <if test="categoryId != null">and category_id = #{categoryId}</if>
+            </where>
+        order by create_time desc
+
+    </select>
 </mapper>

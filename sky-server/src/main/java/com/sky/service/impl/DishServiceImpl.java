@@ -155,14 +155,21 @@ public class DishServiceImpl implements DishService {
     }
 
     /**
-     * 根据菜品分类id查询菜品
+     * 根据菜品分类id及菜品name查询菜品
      * @param categoryId
      * @return
      */
     @Override
-    public List<DishVO> getByCategoryId(Long categoryId) {
-        List<Dish> dishs = dishMapper.getByCategoryId(categoryId);
+    public List<DishVO> getByCategoryId(Long categoryId,String name) {
+        Dish queryDish= Dish.builder()
+                .categoryId(categoryId)
+                .status(StatusConstant.ENABLE)
+                .name(name)
+                .build();
+        List<Dish> dishs = dishMapper.getByCategoryId(queryDish);
+
         List<DishVO> dishVOs=new ArrayList<>();
+        //遍历dishs 封装进dishVOs中
         if(dishs != null && dishs.size() > 0) {
             dishs.forEach(dish -> {
                 DishVO dishVO=new DishVO();
@@ -170,7 +177,6 @@ public class DishServiceImpl implements DishService {
                 dishVOs.add(dishVO);
             });
         }
-
         return dishVOs;
     }
 }
