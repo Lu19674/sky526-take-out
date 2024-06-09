@@ -1,7 +1,9 @@
 package com.sky.interceptor;
 
 import com.sky.constant.JwtClaimsConstant;
+import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
+import com.sky.exception.LoginFailedException;
 import com.sky.properties.JwtProperties;
 import com.sky.utils.JwtUtil;
 import io.jsonwebtoken.Claims;
@@ -55,7 +57,9 @@ public class JwtTokenAdminInterceptor implements HandlerInterceptor {
         } catch (Exception ex) {
             //4、不通过，响应401状态码
             response.setStatus(401);
-            return false;
+            throw new LoginFailedException(MessageConstant.USER_NOT_LOGIN);
+            // TODO 上一句的添加
+            //return false;
         }
     }
 }
