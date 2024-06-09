@@ -149,7 +149,7 @@ public class DishServiceImpl implements DishService {
         if (flavors != null && flavors.size() > 0) {
             flavors.forEach(flavor -> {
                 flavor.setDishId(dishDTO.getId());
-            });//遍历为每一个口味对象附上菜品的主键
+            });//遍历为每一个口味对象的 dish_id 附上菜品的主键id
             dishFlavorMapper.insertBatch(flavors);
         }
     }
