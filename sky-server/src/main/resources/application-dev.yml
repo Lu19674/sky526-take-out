@@ -11,3 +11,8 @@ sky:
     access-key-secret: zp983E4tfxszDVBKwqIGtd25FZ9jfc
     bucket-name: sky526-take-out--1
     endpoint: oss-cn-hangzhou.aliyuncs.com
+  redis:
+    port: 6379
+    host: localhost
+    password: 195277
+    database: 10
