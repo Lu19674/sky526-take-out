@@ -15,6 +15,7 @@ import com.sky.mapper.SetmealDishMapper;
 import com.sky.mapper.SetmealMapper;
 import com.sky.result.PageResult;
 import com.sky.service.SetmealService;
+import com.sky.vo.DishItemVO;
 import com.sky.vo.SetmealVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -82,7 +83,7 @@ public class SetmealServiceImpl implements SetmealService {
     public void deleteBatch(List<Long> ids) {
         //判断是否有起售中的套餐
         for (Long id : ids) {
-            Setmeal setmeal = setmealMapper.getByid(id);
+            Setmeal setmeal = setmealMapper.getById(id);
             if (setmeal.getStatus().equals(StatusConstant.ENABLE)) {
                 throw new DeletionNotAllowedException(MessageConstant.SETMEAL_ON_SALE);
             }
@@ -106,7 +107,7 @@ public class SetmealServiceImpl implements SetmealService {
     @Transactional
     public SetmealVO getById(Long id) {
         //查询套餐基本信息
-        Setmeal setmeal = setmealMapper.getByid(id);
+        Setmeal setmeal = setmealMapper.getById(id);
 
         //查询关联的套餐菜品关联表信息
         List<SetmealDish> setmealDishes = setmealDishMapper.queryBySetmealId(id);
@@ -163,4 +164,24 @@ public class SetmealServiceImpl implements SetmealService {
                 .build();
         setmealMapper.update(setmeal);
     }
+
+    /**
+     * 条件查询
+     * @param setmeal
+     * @return
+     */
+    public List<Setmeal> list(Setmeal setmeal) {
+        List<Setmeal> list = setmealMapper.list(setmeal);
+        return list;
+    }
+
+    /**
+     * 根据id查询菜品选项
+     * @param id
+     * @return
+     */
+    public List<DishItemVO> getDishItemById(Long id) {
+        return setmealMapper.getDishItemBySetmealId(id);
+    }
+
 }
