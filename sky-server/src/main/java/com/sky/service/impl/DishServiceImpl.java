@@ -90,7 +90,7 @@ public class DishServiceImpl implements DishService {
     public void deleteBacth(List<Long> ids) {
         //1判断当前菜品是否能够删除--是否存在起售中的状态的菜品？
         for (Long id : ids) {
-            Dish dish = dishMapper.queryById(id);
+            Dish dish = dishMapper.getById(id);
             if (dish.getStatus().equals(StatusConstant.ENABLE)) {
                 throw new DeletionNotAllowedException(MessageConstant.DISH_ON_SALE);
             }
@@ -116,7 +116,7 @@ public class DishServiceImpl implements DishService {
     public DishVO getByid(Long id) {
         DishVO dishVO = new DishVO();
         //查询基本信息
-        Dish dish = dishMapper.queryById(id);
+        Dish dish = dishMapper.getById(id);
         BeanUtils.copyProperties(dish, dishVO);
         //查询对应口味
         List<DishFlavor> dishFlavors = dishFlavorMapper.queryByDishId(id);

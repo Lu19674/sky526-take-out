@@ -44,7 +44,7 @@ public interface DishMapper {
      * @return
      */
     @Select("select * from dish where id= #{id}")
-    Dish queryById(Long id);
+    Dish getById(Long id);
 
     /**
      * 根据ids毗连删除菜品
