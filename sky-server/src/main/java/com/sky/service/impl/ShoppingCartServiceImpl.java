@@ -25,24 +25,26 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     private DishMapper dishMapper;
     @Autowired
     private SetmealMapper setmealMapper;
+
     /**
      * 添加购物车
+     *
      * @param shoppingCartDTO
      */
     @Override
     public void add(ShoppingCartDTO shoppingCartDTO) {
         //先判断此次添加的商品在次用户的购物车当中是否已经存在了
-        ShoppingCart shoppingCart =new ShoppingCart();
-        BeanUtils.copyProperties(shoppingCartDTO,shoppingCart);
+        ShoppingCart shoppingCart = new ShoppingCart();
+        BeanUtils.copyProperties(shoppingCartDTO, shoppingCart);
         shoppingCart.setUserId(BaseContext.getCurrentId());//设置用户id区别不同用户的购物车（从本线程变量中取得）
         List<ShoppingCart> list = shoppingCartMapper.list(shoppingCart);//执行查询
 
         //存在：只需修改 数量+1
-        if(list!=null && list.size()>0){
+        if (list != null && list.size() > 0) {
             //根据条件查询只能查出一条，所以取list中第一个元素即可
             ShoppingCart cart = list.get(0);
             //在原来数量上 +1
-            cart.setNumber(cart.getNumber()+1);
+            cart.setNumber(cart.getNumber() + 1);
             //执行修改
             shoppingCartMapper.updateNumberById(cart);
         }
@@ -52,17 +54,17 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
             Long dishId = shoppingCartDTO.getDishId();
             Long setmealId = shoppingCartDTO.getSetmealId();
             //如果本次添加的是 菜品 商品：
-            if(dishId !=null){
-                Dish dish =new Dish();
-                dish =dishMapper.getById(dishId);
+            if (dishId != null) {
+                Dish dish = new Dish();
+                dish = dishMapper.getById(dishId);
                 shoppingCart.setName(dish.getName());
                 shoppingCart.setImage(dish.getImage());
                 shoppingCart.setAmount(dish.getPrice());
             }
             //如果本次添加的是 套餐 商品
-            else if(setmealId != null){
-                Setmeal setmeal =new Setmeal();
-                setmeal= setmealMapper.getById(setmealId);
+            else if (setmealId != null) {
+                Setmeal setmeal = new Setmeal();
+                setmeal = setmealMapper.getById(setmealId);
                 shoppingCart.setName(setmeal.getName());
                 shoppingCart.setImage(setmeal.getImage());
                 shoppingCart.setAmount(setmeal.getPrice());
@@ -77,6 +79,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
     /**
      * 查看购物车
+     *
      * @return
      */
     @Override
@@ -94,7 +97,31 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
      */
     @Override
     public void emptyCart() {
-        Long userId=BaseContext.getCurrentId();
+        Long userId = BaseContext.getCurrentId();
         shoppingCartMapper.clearByUserId(userId);
+    }
+
+    /**
+     * 删除购物车中的一个商品
+     *
+     * @param shoppingCartDTO
+     */
+    @Override
+    public void removeOne(ShoppingCartDTO shoppingCartDTO) {
+        ShoppingCart shoppingCart = new ShoppingCart();
+        BeanUtils.copyProperties(shoppingCartDTO, shoppingCart);
+        shoppingCart.setUserId(BaseContext.getCurrentId());//设置用户id区别不同用户的购物车（从本线程变量中取得）
+        ShoppingCart cart = shoppingCartMapper.list(shoppingCart).get(0);//执行查询
+        Integer number = cart.getNumber();//获取商品数量
+        //判断商品数量是否大于 1
+        if (number > 1) {
+            //如果次商品在购物车中的数量(number) >1 ,则修改为 number-=1
+            cart.setNumber(number - 1);
+            shoppingCartMapper.updateNumberById(cart);
+        } else if (number == 1) {
+            //如果次商品在购物车中的数量（number）==1 ，则删除此商品
+            shoppingCartMapper.removeOneById(cart);
+        }
+
     }
 }
