@@ -34,6 +34,12 @@ public interface ShoppingCartMapper {
     void insert(ShoppingCart shoppingCart);
 
     /**
+     * 批量新增购物车数据
+     * @param cartList
+     */
+    void insertBatch(List<ShoppingCart> cartList);
+
+    /**
      * 清空购物车
      */
     @Delete("delete from shopping_cart where user_id=#{userId}")

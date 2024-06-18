@@ -32,4 +32,8 @@
     </delete>
 
 
+    <select id="queryDishStatusBySetmealId" resultType="java.lang.Integer">
+        select d.status from setmeal_dish sd, dish d where  sd.dish_id = d.id and setmeal_id = #{setmealId}
+    </select>
+
 </mapper>

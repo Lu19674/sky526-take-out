@@ -1,5 +1,6 @@
 package com.sky.service.impl;
 
+import com.alibaba.druid.support.spring.stat.annotation.Stat;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
@@ -10,6 +11,7 @@ import com.sky.entity.Category;
 import com.sky.entity.Setmeal;
 import com.sky.entity.SetmealDish;
 import com.sky.exception.DeletionNotAllowedException;
+import com.sky.exception.SetmealEnableFailedException;
 import com.sky.mapper.CategoryMapper;
 import com.sky.mapper.SetmealDishMapper;
 import com.sky.mapper.SetmealMapper;
@@ -95,7 +97,6 @@ public class SetmealServiceImpl implements SetmealService {
         //执行泰餐与菜品的关联表的相关批量删除
         setmealDishMapper.deleteBatch(ids);
 
-
     }
 
     /**
@@ -158,6 +159,14 @@ public class SetmealServiceImpl implements SetmealService {
      */
     @Override
     public void updateStatusById(Integer status, Long id) {
+        if(status.equals(StatusConstant.ENABLE)) {
+            List<Integer> dishStatusList = setmealDishMapper.queryDishStatusBySetmealId(id);
+            for (Integer dishStatus : dishStatusList) {
+                if (dishStatus == StatusConstant.DISABLE)
+                    //套餐内包含未启售菜品，无法启售
+                    throw new SetmealEnableFailedException(MessageConstant.SETMEAL_ENABLE_FAILED);
+            }
+        }
         Setmeal setmeal=Setmeal.builder()
                 .id(id)
                 .status(status)
