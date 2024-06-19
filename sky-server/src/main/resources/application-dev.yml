@@ -19,3 +19,7 @@ sky:
   wechat:
     appid: wx171ed41bb228c98b
     secret: 74a86f5efad0572bad4e5e975bc58788
+  shop:
+    address: 广西玉林市玉州区名山街道教育东路东1303号玉林师范学院（东校区)
+  baidu:
+    ak: A02I8HDgrQza19OovYIu2x56iAP98Ciw
