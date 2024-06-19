@@ -51,7 +51,7 @@
     </update>
 
 
-    <select id="pageQueryByStatus" resultType="com.sky.entity.Orders">
+    <select id="pageQuery" resultType="com.sky.entity.Orders">
         select * from orders
         <where>
             <if test="status != null">
@@ -61,10 +61,10 @@
                 and order_time between #{beginTime} and #{endTime}
             </if>
             <if test="number != null">
-                and number = #{number}
+                and number like concat('%',#{number},'%')
             </if>
             <if test="phone != null">
-                and phone = #{phone}
+                and phone like concat('%',#{phone},'%')
             </if>
             <if test="userId != null">
                 and user_id = #{userId}

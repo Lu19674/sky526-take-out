@@ -33,7 +33,7 @@ public interface OrderMapper {
      * @param
      * @return
      */
-    Page<Orders> pageQueryByStatus(OrdersPageQueryDTO ordersPageQueryDTO);
+    Page<Orders> pageQuery(OrdersPageQueryDTO ordersPageQueryDTO);
 
     /**
      * 根据id查询订单

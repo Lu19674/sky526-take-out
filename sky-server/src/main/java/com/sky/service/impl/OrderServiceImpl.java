@@ -1,13 +1,11 @@
 package com.sky.service.impl;
 
-import com.alibaba.fastjson.JSONObject;
+
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
-import com.sky.dto.OrdersPageQueryDTO;
-import com.sky.dto.OrdersPaymentDTO;
-import com.sky.dto.OrdersSubmitDTO;
+import com.sky.dto.*;
 import com.sky.entity.*;
 import com.sky.exception.AddressBookBusinessException;
 import com.sky.exception.OrderBusinessException;
@@ -17,17 +15,19 @@ import com.sky.result.PageResult;
 import com.sky.service.OrderService;
 import com.sky.utils.WeChatPayUtil;
 import com.sky.vo.OrderPaymentVO;
+import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -72,7 +72,7 @@ public class OrderServiceImpl implements OrderService {
         //2、向订单表插入1条数据
         Orders orders = Orders.builder()
                 .userId(userId)
-                .address(addressBook.toString())
+                .address(addressBook.getDetail())
                 .number(String.valueOf(System.currentTimeMillis())) //设置订单好为时间戳串
                 .status(Orders.PENDING_PAYMENT) //设置订单状态为 待支付
                 .phone(addressBook.getPhone())
@@ -174,7 +174,7 @@ public class OrderServiceImpl implements OrderService {
                 .userId(BaseContext.getCurrentId())
                 .build();
         //执行分页条查询
-        Page<Orders> pages = orderMapper.pageQueryByStatus(ordersPageQueryDTO);
+        Page<Orders> pages = orderMapper.pageQuery(ordersPageQueryDTO);
         List<OrderVO> orderVOList = new ArrayList<>();
 
         if (pages != null && pages.getTotal() > 0) {
@@ -211,7 +211,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
-     * 取消订单
+     * 用户取消订单
      *
      * @param id
      */
@@ -233,7 +233,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         orders.setCancelTime(LocalDateTime.now());//订单取消时间
-        orders.setCancelReason("用户取消");//订单取消时间
+        orders.setCancelReason("用户取消");//订单取消原因
         orders.setStatus(Orders.CANCELLED);//修改订单状态
         orderMapper.update(orders);
     }
@@ -248,17 +248,167 @@ public class OrderServiceImpl implements OrderService {
         //查询订单明细列表
         List<OrderDetail> orderDetails = orderDetailMapper.getByOrderId(id);
 
-        List<ShoppingCart> cartList =new ArrayList<>();
+        List<ShoppingCart> cartList = new ArrayList<>();
 
         //遍历 ，把此订单明细信息添加进购物车
         for (OrderDetail orderDetail : orderDetails) {
-            ShoppingCart shoppingCart =new ShoppingCart();
-            BeanUtils.copyProperties(orderDetail , shoppingCart);
+            ShoppingCart shoppingCart = new ShoppingCart();
+            BeanUtils.copyProperties(orderDetail, shoppingCart);
             shoppingCart.setCreateTime(LocalDateTime.now());//购物车单条数据的创建时间
             shoppingCart.setUserId(BaseContext.getCurrentId());//要给用户id 才能在购物车查到数据！（踩过的坑）
             cartList.add(shoppingCart);
         }
         //批量插入购物车数据
         shoppingCartMapper.insertBatch(cartList);
+    }
+
+    /**
+     * 条件分页查询订单
+     *
+     * @param dto
+     * @return
+     */
+    public PageResult pageByDTO(OrdersPageQueryDTO dto) {
+        PageHelper.startPage(dto.getPage(), dto.getPageSize());
+        //管理端要显示全部用户订单，无需设置用户id！！
+//        dto.setUserId(BaseContext.getCurrentId());
+        //执行分页条查询
+        Page<Orders> pages = orderMapper.pageQuery(dto);
+        List<OrderVO> orderVOList = new ArrayList<>();
+
+        if (pages != null && pages.getTotal() > 0) {
+            //遍历分页查询到的 orders 集合 查询每个订单的 详细信息（ordersDetail） 并完成封装
+            for (Orders orders : pages) {
+                OrderVO orderVO = new OrderVO();
+                BeanUtils.copyProperties(orders, orderVO);
+                List<OrderDetail> orderDetails = orderDetailMapper.getByOrderId(orders.getId());
+
+                //订单包含的菜品字段 OrderDishes，以String显示
+                StringBuilder dishesSB = new StringBuilder();
+                for (OrderDetail orderDetail : orderDetails) {
+                    dishesSB.append(orderDetail.getName()).append("*").append(orderDetail.getNumber()).append(";");
+                }
+                String dishesString = dishesSB.toString();
+                orderVO.setOrderDishes(dishesString);
+                orderVO.setOrderDetailList(orderDetails);
+                orderVOList.add(orderVO);
+            }
+        }
+
+        assert pages != null;
+        return new PageResult(pages.getTotal(), orderVOList);
+
+    }
+
+    /**
+     * 各个状态的订单数量统计
+     *
+     * @return
+     */
+    public OrderStatisticsVO queryStatistics() {
+        //查出所有订单列表
+        Page<Orders> orders = orderMapper.pageQuery(OrdersPageQueryDTO.builder().build());
+        int toBeConfirmed = 0, confirmed = 0, deliveryInProgress = 0;
+
+        //遍历得到每种状态的订单数量
+        for (Orders order : orders) {
+            if(order.getStatus().equals(Orders.TO_BE_CONFIRMED))
+                //待接单
+                toBeConfirmed++;
+            else if(order.getStatus().equals(Orders.CONFIRMED))
+                //待派送
+                confirmed++;
+            else if(order.getStatus().equals(Orders.DELIVERY_IN_PROGRESS))
+                //派送中
+                deliveryInProgress++;
+        }
+
+        //封装返回结果
+        return OrderStatisticsVO.builder()
+                .toBeConfirmed(toBeConfirmed)
+                .confirmed(confirmed)
+                .deliveryInProgress(deliveryInProgress)
+                .build();
+    }
+
+    /**
+     * 商家接单
+     * @param dto
+     */
+    public void confirm(OrdersConfirmDTO dto) {
+        orderMapper.update(Orders.builder()
+                .status(Orders.CONFIRMED)//修改订单状态为已接单（待派送）
+                .id(dto.getId())
+                .build());
+    }
+
+    /**
+     * 商家拒单
+      * @param dto
+     */
+    public void rejection(OrdersRejectionDTO dto) {
+        Orders orders =orderMapper.getById(dto.getId());
+
+        if(!orders.getStatus().equals(Orders.TO_BE_CONFIRMED)){
+            //不是待接单状态的订单不能拒单
+            throw new OrderBusinessException(MessageConstant.UNKNOWN_ERROR);
+        }
+        if(orders.getPayStatus().equals(Orders.PAID)){
+            //如果已支付。则把支付状态改为已退款（退款业务跳过）
+            orders.setPayStatus(Orders.REFUND);
+        }
+        orders.setRejectionReason(dto.getRejectionReason());//拒单原因
+        orders.setStatus(Orders.CANCELLED); //订单状态设置为已取消
+        orders.setCancelTime(LocalDateTime.now()); //取消时间
+        orders.setCancelReason("商家拒单"); //取消原因
+        //执行修改
+        orderMapper.update(orders);
+
+    }
+
+    /**
+     * 商家取消订单
+     * @param dto
+     */
+    public void cancelByDTO(OrdersCancelDTO dto) {
+        Orders orders = orderMapper.getById(dto.getId());
+        if (orders == null) {
+            //订单不存在异常
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        Integer ordersStatus = orders.getStatus();//订单状态
+
+        if (!ordersStatus.equals(Orders.TO_BE_CONFIRMED) || ordersStatus.equals(Orders.CANCELLED)) {
+            //不是待接单/已取消状态下取消订单，需要给用户退款（退款过程跳过）
+            orders.setPayStatus(Orders.REFUND);
+        }
+        orders.setCancelTime(LocalDateTime.now());//订单取消时间
+        orders.setCancelReason(dto.getCancelReason());//订单取消原因
+        orders.setStatus(Orders.CANCELLED);//修改订单状态
+        orderMapper.update(orders);
+    }
+
+    /**
+     * 派送订单
+     * @param id
+     */
+    public void delivery(Long id) {
+        orderMapper.update(Orders.builder()
+                .id(id)
+                .status(Orders.DELIVERY_IN_PROGRESS) //订单状态设置为派送中
+                .build());
+    }
+
+    /**
+     * 完成订单
+     * @param id
+     */
+    public void complete(Long id) {
+        orderMapper.update(Orders.builder()
+                .id(id)
+                .status(Orders.COMPLETED) //订单状态设置为已完成
+                .deliveryTime(LocalDateTime.now()) //订单送达时间设置为现在
+                .build());
     }
 }
