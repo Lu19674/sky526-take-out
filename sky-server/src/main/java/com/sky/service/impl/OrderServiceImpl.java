@@ -23,6 +23,7 @@ import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
+import com.sky.webSocket.WebSocketServer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +57,8 @@ public class OrderServiceImpl implements OrderService {
     private UserMapper userMapper;
     @Autowired
     private WeChatPayUtil weChatPayUtil;
+    @Autowired
+    private WebSocketServer webSocketServer;
 
     /**
      * 用户下单
@@ -241,6 +244,17 @@ public class OrderServiceImpl implements OrderService {
                 .build();
 
         orderMapper.update(orders);
+
+        //通过websocket向客户端浏览器推送消息 返回参数：type orderId content
+        Map<String,Object> map=new HashMap<>();
+        map.put("type",1); //1：来单提醒  2：客户催单
+        map.put("orderId",ordersDB.getId());
+        map.put("content","订单号："+outTradeNo);
+
+        //Map 转化为 JSON
+        String json = JSON.toJSONString(map);
+        //群发websocket
+        webSocketServer.sendToAllClient(json);
     }
 
     /**
@@ -492,5 +506,24 @@ public class OrderServiceImpl implements OrderService {
                 .status(Orders.COMPLETED) //订单状态设置为已完成
                 .deliveryTime(LocalDateTime.now()) //订单送达时间设置为现在
                 .build());
+    }
+
+    /**
+     * 客户催单
+     * @param id
+     */
+    public void reminder(Long id) {
+        Orders orders = orderMapper.getById(id);
+        if (orders == null) {
+            //订单不存在异常
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        Map<String,Object> map =new HashMap<>();
+        map.put("type",2);
+        map.put("oderId",orders.getId());
+        map.put("content","订单号："+orders.getNumber());
+        //通过websocket连接向管理端推送消息
+        webSocketServer.sendToAllClient(JSON.toJSONString(map));
     }
 }

@@ -1,6 +1,7 @@
 package com.sky.controller.user;
 
 
+import com.sky.context.BaseContext;
 import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.dto.OrdersPaymentDTO;
 import com.sky.dto.OrdersSubmitDTO;
@@ -15,6 +16,8 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.beans.beancontext.BeanContext;
 
 
 @RestController("userOrderController")
@@ -104,5 +107,19 @@ public class OrderController {
         log.info("再来一单 {}",id);
         orderService.repetitionById(id);
         return Result.success();
+    }
+
+    /**
+     * 客户催单
+     * @param id
+     * @return
+     */
+    @GetMapping("/reminder/{id}")
+    @ApiOperation("客户催单")
+    public Result reminder(@PathVariable Long id){
+        log.info("客户{}催单：{}", BaseContext.getCurrentId(),id);
+        orderService.reminder(id);
+        return Result.success();
+
     }
 }
