@@ -5,6 +5,10 @@ import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.entity.Orders;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Mapper
 public interface OrderMapper {
@@ -42,4 +46,21 @@ public interface OrderMapper {
      */
     @Select("select * from orders where id = #{id}")
     Orders getById(Long id);
+
+    /**
+     * 查询下单时间小于 time 的 status 状态订单列表
+     * @param status
+     * @param time
+     * @return
+     */
+    @Select("select * from orders where status = #{status} and order_time < #{time}")
+    List<Orders> getBystatusAndOrderTimeLT(Integer status, LocalDateTime time);
+
+    /**
+     * 根据订单状态查询订单
+     * @param status
+     * @return
+     */
+    @Select("select * from orders where status = #{status}")
+    List<Orders> getBystatus(Integer status);
 }

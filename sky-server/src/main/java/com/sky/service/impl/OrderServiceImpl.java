@@ -183,8 +183,9 @@ public class OrderServiceImpl implements OrderService {
 
         if(distance > 5000){
             //配送距离超过5000米
-            throw new OrderBusinessException("超出配送范围");
+            throw new OrderBusinessException("超出配送范围！");
         }
+
     }
 
     /**
