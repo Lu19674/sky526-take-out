@@ -24,7 +24,7 @@ public class OrderTask {
      * 订单待支付超时状态定时处理
      */
 //    @Scheduled(cron = "1/10 * * * * ? ")
-    @Scheduled(cron = "0 0/1 * * * ? ") //每一分钟自动执行
+    @Scheduled(cron = "0 0/5 * * * ? ") //每五分钟自动执行
     public void processTimeoutOrder(){
         log.info("定时处理超时订单：{}", LocalDateTime.now());
 
