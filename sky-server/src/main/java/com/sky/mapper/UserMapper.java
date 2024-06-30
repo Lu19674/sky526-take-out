@@ -35,5 +35,5 @@ public interface UserMapper {
      * @param map
      * @return
      */
-    Integer sumByMap(Map<String, Object> map);
+    Integer countByMap(Map<String, Object> map);
 }

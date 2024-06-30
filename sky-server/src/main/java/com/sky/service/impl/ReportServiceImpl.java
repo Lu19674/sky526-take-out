@@ -1,8 +1,6 @@
 package com.sky.service.impl;
 
 import com.sky.dto.GoodsSalesDTO;
-import com.sky.dto.SalesTop;
-import com.sky.entity.OrderDetail;
 import com.sky.entity.Orders;
 import com.sky.mapper.OrderDetailMapper;
 import com.sky.mapper.OrderMapper;
@@ -107,10 +105,10 @@ public class ReportServiceImpl implements ReportService {
             Map<String, Object> map = new HashMap<>();
             map.put("end", endTime);
             //先只传 endTime 来查询截至的总用户量
-            Integer allSum = userMapper.sumByMap(map);
+            Integer allSum = userMapper.countByMap(map);
             map.put("begin", beginTime);
             //beginTime和endTime同时传参 - 查询当天用户量 即新增用户量
-            Integer newSum = userMapper.sumByMap(map);
+            Integer newSum = userMapper.countByMap(map);
 
             allSum = allSum == null ? 0 : allSum;
             newSum = newSum == null ? 0 : newSum;
