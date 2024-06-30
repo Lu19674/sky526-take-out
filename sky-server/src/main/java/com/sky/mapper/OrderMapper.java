@@ -78,4 +78,11 @@ public interface OrderMapper {
      * @return
      */
     Integer countByMap(Map<String, Object> map);
+
+    /**
+     * 根据时间段查询订单列表
+     * @param map
+     * @return
+     */
+    List<Orders> getByMap(Map<String, Object> map);
 }

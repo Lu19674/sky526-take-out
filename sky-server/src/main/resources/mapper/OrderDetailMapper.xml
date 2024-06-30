@@ -10,4 +10,17 @@
             (#{od.name}, #{od.image}, #{od.orderId}, #{od.dishId}, #{od.setmealId}, #{od.dishFlavor}, #{od.number}, #{od.amount})
             </foreach>
     </insert>
+
+    <select id="queryTop10ByOederIds" resultType="com.sky.dto.GoodsSalesDTO">
+        select name,sum(number) as number from order_detail
+            <where>
+                    and id in
+                <foreach collection="orderIds" item="id" separator="," open="(" close=")">
+                    #{id}
+                </foreach>
+            </where>
+            group by name
+            order by number desc
+            limit 10
+    </select>
 </mapper>

@@ -1,10 +1,15 @@
 package com.sky.service.impl;
 
+import com.sky.dto.GoodsSalesDTO;
+import com.sky.dto.SalesTop;
+import com.sky.entity.OrderDetail;
 import com.sky.entity.Orders;
+import com.sky.mapper.OrderDetailMapper;
 import com.sky.mapper.OrderMapper;
 import com.sky.mapper.UserMapper;
 import com.sky.service.ReportService;
 import com.sky.vo.OrderReportVO;
+import com.sky.vo.SalesTop10ReportVO;
 import com.sky.vo.TurnoverReportVO;
 import com.sky.vo.UserReportVO;
 import org.apache.commons.lang3.StringUtils;
@@ -26,6 +31,8 @@ public class ReportServiceImpl implements ReportService {
     private OrderMapper orderMapper;
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private OrderDetailMapper orderDetailMapper;
 
     /**
      * 营业额统计
@@ -68,6 +75,7 @@ public class ReportServiceImpl implements ReportService {
         String amountStr = StringUtils.join(amountList, ",");
 
         //封装VO返回
+
         return TurnoverReportVO.builder()
                 .dateList(dateStr)
                 .turnoverList(amountStr)
@@ -183,6 +191,50 @@ public class ReportServiceImpl implements ReportService {
                 .validOrderCountList(validOrderCountStr)
                 .validOrderCount(validOrderCountSum)
                 .totalOrderCount(orderCountSum)
+                .build();
+    }
+
+    /**
+     * 商品销量排名top10
+     * @param begin
+     * @param end
+     * @return
+     */
+    public SalesTop10ReportVO top10Statistics(LocalDate begin, LocalDate end) {
+        LocalDateTime beginTime = LocalDateTime.of(begin, LocalTime.MIN);//开始时间
+        LocalDateTime endTime = LocalDateTime.of(end, LocalTime.MAX);//结束时间
+
+        Map<String,Object> map=new HashMap<>();
+        map.put("begin",beginTime);
+        map.put("end",endTime);
+        map.put("status",Orders.COMPLETED);
+        //查询订单列表
+        List<Orders> ordersList = orderMapper.getByMap(map);
+
+        //存放订单id集
+        List<Long> ordersIds= new ArrayList<>();
+        for (Orders orders : ordersList) {
+            ordersIds.add(orders.getId());
+        }
+
+        //根据订单id集批量查询订单明细top10列表
+        List<GoodsSalesDTO> goodsList  =orderDetailMapper.queryTop10ByOederIds(ordersIds);
+
+        //存放商品名列表
+        List<String> nameList =new ArrayList<>();
+        //存放商品销售数量列表
+        List<Integer> numberList =new ArrayList<>();
+
+        //遍历订单明细top10列表，拿出商品名及销售数量存如对应集合
+        for (GoodsSalesDTO good : goodsList) {
+            nameList.add(good.getName());
+            numberList.add(good.getNumber());
+        }
+
+        //封装VO返回
+        return SalesTop10ReportVO.builder()
+                .nameList(StringUtils.join(nameList,","))
+                .numberList(StringUtils.join(numberList,","))
                 .build();
     }
 }
