@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -93,5 +95,15 @@ public class ReportController {
         log.info("商品销量top10统计，{}--{}",begin,end);
         SalesTop10ReportVO vo= reportService.top10Statistics(begin,end);
         return Result.success(vo);
+    }
+
+    /**
+     * 到处excel运营数据报表
+     * @param response
+     */
+    @ApiOperation("导出excel运营数据报表")
+    @GetMapping("/export")
+    public void export(HttpServletResponse response) throws IOException {
+        reportService.export(response);
     }
 }
